@@ -1,0 +1,1465 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Streaming Elite - Suscripciones Premium</title>
+    <meta name="description" content="Las mejores suscripciones digitales y combos de streaming al mejor precio. Netflix, Disney+, HBO Max, Spotify y más.">
+    <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/5968/5968705.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        :root {
+            --primary: #1a2a6c;
+            --secondary: #b21f1f;
+            --accent: #fdbb2d;
+            --light: #ffffff;
+            --dark: #222222;
+            --gray: #f5f5f5;
+            --dark-gray: #777777;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+        body { background-color: var(--gray); color: var(--dark); line-height: 1.6; }
+        .container { width: 90%; max-width: 1200px; margin: 0 auto; padding: 0 15px; }
+        
+        /* Admin Panel Styles */
+        .admin-panel {
+            display: none;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            margin: 30px auto;
+            max-width: 1200px;
+        }
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        .admin-header h2 {
+            color: var(--primary);
+        }
+        .logout-btn {
+            background: var(--secondary);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .orders-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        .orders-table th, .orders-table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        .orders-table th {
+            background: var(--primary);
+            color: white;
+        }
+        .orders-table tr:hover {
+            background: #f9f9f9;
+        }
+        .order-details {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 5px;
+        }
+        .order-details ul {
+            list-style: none;
+        }
+        .order-details li {
+            margin-bottom: 5px;
+            padding: 5px 0;
+            border-bottom: 1px dashed #ddd;
+        }
+        
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.8);
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 5px 30px rgba(0,0,0,0.3);
+            width: 80%;
+            max-width: 700px;
+            position: relative;
+            animation: modalopen 0.5s;
+        }
+        @keyframes modalopen {
+            from {opacity: 0; transform: translateY(-50px);}
+            to {opacity: 1; transform: translateY(0);}
+        }
+        .close {
+            position: absolute;
+            top: 15px;
+            right: 25px;
+            font-size: 28px;
+            font-weight: bold;
+            color: #aaa;
+            cursor: pointer;
+        }
+        .close:hover {
+            color: var(--secondary);
+        }
+        .modal-header {
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+            margin-bottom: 20px;
+        }
+        .modal-header h2 {
+            color: var(--primary);
+            text-align: center;
+        }
+        .modal-body {
+            padding: 20px 0;
+        }
+        .modal-footer {
+            padding: 15px 0;
+            border-top: 1px solid #eee;
+            text-align: right;
+        }
+        
+        /* Checkout Form */
+        .checkout-form .form-group {
+            margin-bottom: 20px;
+        }
+        .checkout-form label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--primary);
+        }
+        .checkout-form input, .checkout-form select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+        .checkout-form input:focus, .checkout-form select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(26,42,108,0.2);
+            outline: none;
+        }
+        .form-row {
+            display: flex;
+            gap: 20px;
+        }
+        .form-row .form-group {
+            flex: 1;
+        }
+        .order-summary {
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        .order-summary h3 {
+            margin-bottom: 15px;
+            color: var(--primary);
+        }
+        .order-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .order-total {
+            font-weight: bold;
+            font-size: 1.2rem;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 2px solid var(--primary);
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        /* Invoice Styles */
+        .invoice-container {
+            background: white;
+            padding: 30px;
+            max-width: 800px;
+            margin: 20px auto;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .invoice-header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid var(--primary);
+            padding-bottom: 20px;
+        }
+        .invoice-header h1 {
+            color: var(--primary);
+            margin-bottom: 5px;
+        }
+        .invoice-details {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+        }
+        .invoice-company, .invoice-client {
+            flex: 1;
+        }
+        .invoice-items {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        .invoice-items th {
+            background: var(--primary);
+            color: white;
+            padding: 10px;
+            text-align: left;
+        }
+        .invoice-items td {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        .invoice-totals {
+            margin-top: 20px;
+            text-align: right;
+        }
+        .invoice-totals table {
+            display: inline-block;
+        }
+        .invoice-totals td {
+            padding: 5px 15px;
+        }
+        .invoice-totals .total {
+            font-weight: bold;
+            font-size: 1.2rem;
+            color: var(--secondary);
+        }
+        .invoice-footer {
+            margin-top: 40px;
+            text-align: center;
+            color: var(--dark-gray);
+            font-size: 0.9rem;
+        }
+        
+        /* Hero */
+        .hero {
+            background: linear-gradient(135deg, var(--primary), var(--secondary), var(--accent));
+            color: var(--light);
+            padding: 90px 0 130px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            clip-path: polygon(0 0, 100% 0, 100% 90%, 0 100%);
+        }
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: url('https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80') center/cover;
+            opacity: 0.18; z-index: 1;
+        }
+        .hero-content { position: relative; z-index: 2; }
+        .hero h1 {
+            font-size: 3.7rem;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 8px rgba(0,0,0,0.4);
+            font-weight: 800;
+            letter-spacing: 2px;
+        }
+        .hero p {
+            font-size: 1.4rem;
+            max-width: 700px;
+            margin: 0 auto 30px;
+            opacity: 0.95;
+        }
+        .hero .cta-btn {
+            margin-top: 25px;
+            background: linear-gradient(135deg, var(--accent), var(--secondary));
+            color: var(--dark);
+            border: none;
+            border-radius: 30px;
+            padding: 15px 40px;
+            font-size: 1.2rem;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 8px 24px rgba(253,187,45,0.15);
+            transition: all 0.3s;
+        }
+        .hero .cta-btn:hover {
+            background: linear-gradient(135deg, var(--secondary), var(--accent));
+            color: var(--light);
+            transform: scale(1.05) translateY(-3px);
+        }
+        /* Login Section */
+        .login-section { margin-top: -60px; position: relative; z-index: 10; }
+        .login-card {
+            background: var(--light);
+            border-radius: 15px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+            padding: 30px;
+            max-width: 500px;
+            margin: 0 auto;
+            transition: all 0.3s;
+        }
+        .login-card:hover { transform: translateY(-5px); box-shadow: 0 20px 50px rgba(0,0,0,0.2);}
+        .login-card h2 { color: var(--primary); text-align: center; margin-bottom: 25px; font-size: 1.8rem;}
+        .form-group { margin-bottom: 20px;}
+        .form-group label { display: block; margin-bottom: 8px; font-weight: 500; color: var(--primary);}
+        .form-group input {
+            width: 100%; padding: 12px 15px; border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; transition: all 0.3s;
+        }
+        .form-group input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(26,42,108,0.2);
+            outline: none;
+        }
+        .form-options { display: flex; justify-content: space-between; align-items: center; margin: 20px 0;}
+        .remember-me { display: flex; align-items: center;}
+        .remember-me input { margin-right: 8px;}
+        .forgot-password { color: var(--secondary); text-decoration: none; font-size: 0.9rem;}
+        .forgot-password:hover { text-decoration: underline;}
+        .btn {
+            display: inline-block; padding: 12px 25px; border-radius: 30px; font-weight: 600; text-align: center;
+            cursor: pointer; transition: all 0.3s; border: none; font-size: 1rem;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, var(--secondary), var(--accent));
+            color: var(--light); width: 100%;
+        }
+        .btn-primary:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(178,31,31,0.3);}
+        .auth-footer { text-align: center; margin-top: 20px; color: var(--dark-gray);}
+        .auth-footer a { color: var(--primary); font-weight: 600; text-decoration: none;}
+        .auth-footer a:hover { text-decoration: underline;}
+        /* Section Titles */
+        .section { padding: 80px 0;}
+        .section-title { text-align: center; margin-bottom: 50px;}
+        .section-title h2 {
+            font-size: 2.5rem; color: var(--primary); margin-bottom: 15px; position: relative; display: inline-block;
+        }
+        .section-title h2::after {
+            content: ''; position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%);
+            width: 80px; height: 4px; background: linear-gradient(90deg, var(--primary), var(--secondary)); border-radius: 2px;
+        }
+        .section-title p { color: var(--dark-gray); max-width: 700px; margin: 0 auto;}
+        /* Services Grid */
+        .services-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 25px;
+        }
+        .service-card, .combo-card {
+            background: var(--light);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            transition: all 0.3s;
+            position: relative;
+        }
+        .service-card:hover, .combo-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.12);
+        }
+        .service-img {
+            height: 160px;
+            background-size: contain;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-color: white;
+        }
+        .service-content, .combo-content { padding: 20px;}
+        .service-content h3, .combo-content h3 {
+            font-size: 1.3rem; margin-bottom: 10px; color: var(--primary); display: flex; align-items: center;
+        }
+        .service-content h3 .emoji, .combo-content h3 .emoji { margin-right: 10px; font-size: 1.5rem;}
+        .service-content .price, .combo-content .price {
+            font-size: 1.5rem; font-weight: 700; color: var(--secondary); margin: 10px 0;
+        }
+        .combo-card {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: var(--light);
+        }
+        .combo-badge {
+            position: absolute; top: 15px; right: 15px;
+            background-color: var(--accent); color: var(--dark);
+            padding: 5px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: 600;
+        }
+        .combo-content .price { color: var(--accent); margin: 15px 0;}
+        .combo-content .platforms {
+            display: flex; flex-wrap: wrap; gap: 10px; margin: 15px 0;
+        }
+        .platform-tag {
+            background-color: rgba(255,255,255,0.15);
+            padding: 5px 10px; border-radius: 20px; font-size: 0.9rem; display: flex; align-items: center;
+        }
+        .platform-tag .emoji { margin-right: 5px;}
+        .btn-block { display: block; width: 100%; text-align: center;}
+        /* Share Buttons */
+        .share-section {
+            text-align: center; padding: 50px 0 40px; background: linear-gradient(90deg, var(--primary), var(--secondary));
+            color: white; margin-top: 40px;
+        }
+        .share-section h3 { font-size: 2rem; margin-bottom: 20px; }
+        .share-buttons {
+            display: flex; justify-content: center; gap: 18px; margin-top: 20px;
+        }
+        .share-btn {
+            display: flex; align-items: center; justify-content: center;
+            width: 54px; height: 54px; border-radius: 50%; color: white; font-size: 1.5rem;
+            transition: all 0.3s; box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        .share-btn:hover { transform: translateY(-5px) scale(1.13);}
+        .whatsapp { background-color: #25D366;}
+        .facebook { background-color: #3b5998;}
+        .twitter { background-color: #1DA1F2;}
+        .link { background-color: var(--accent); color: var(--dark);}
+        /* WhatsApp Floating Button */
+        .whatsapp-float {
+            position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px;
+            background-color: #25D366; color: white; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; font-size: 2rem;
+            box-shadow: 0 5px 20px rgba(37,211,102,0.3); z-index: 100; transition: all 0.3s;
+            text-decoration: none;
+        }
+        .whatsapp-float:hover { transform: scale(1.1) translateY(-5px); box-shadow: 0 8px 25px rgba(37,211,102,0.4);}
+        /* Footer */
+        footer {
+            background-color: var(--dark); color: var(--light); padding: 50px 0 20px;
+        }
+        .footer-content {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 30px; margin-bottom: 40px;
+        }
+        .footer-column h3 { color: var(--accent); margin-bottom: 20px; font-size: 1.2rem;}
+        .footer-column ul { list-style: none;}
+        .footer-column ul li { margin-bottom: 10px;}
+        .footer-column ul li a { color: #ccc; text-decoration: none; transition: all 0.3s;}
+        .footer-column ul li a:hover { color: var(--accent); padding-left: 5px;}
+        .social-links { display: flex; gap: 15px; margin-top: 20px;}
+        .social-links a {
+            display: flex; align-items: center; justify-content: center;
+            width: 40px; height: 40px; border-radius: 50%; background-color: rgba(255,255,255,0.1);
+            color: white; transition: all 0.3s;
+        }
+        .social-links a:hover { background-color: var(--accent); color: var(--dark); transform: translateY(-3px);}
+        .copyright {
+            text-align: center; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1);
+            color: #aaa; font-size: 0.95rem;
+        }
+        /* Responsive */
+        @media (max-width: 900px) {
+            .hero h1 { font-size: 2.5rem;}
+            .section-title h2 { font-size: 2rem;}
+            .form-row { flex-direction: column; gap: 0;}
+            .orders-table { display: block; overflow-x: auto; }
+        }
+        @media (max-width: 600px) {
+            .hero { padding: 50px 0 80px;}
+            .hero h1 { font-size: 1.6rem;}
+            .login-card { padding: 15px;}
+            .section { padding: 40px 0;}
+            .share-section { padding: 30px 0 20px;}
+            .modal-content { width: 95%; padding: 20px;}
+        }
+    </style>
+</head>
+<body>
+    <!-- Hero Banner -->
+    <section class="hero">
+        <div class="hero-content container">
+            <h1><i class="fa-solid fa-crown"></i> STREAMING ELITE</h1>
+            <p>Las mejores suscripciones digitales y combos premium al precio más competitivo del mercado.</p>
+            <a href="#combos" class="cta-btn">Ver Combos Exclusivos <i class="fa fa-arrow-down"></i></a>
+        </div>
+    </section>
+
+    <!-- Login Section -->
+    <section class="login-section">
+        <div class="container">
+            <div class="login-card">
+                <h2>Iniciar Sesión</h2>
+                <form id="loginForm">
+                    <div class="form-group">
+                        <label for="email">Correo Electrónico</label>
+                        <input type="email" id="email" placeholder="tucorreo@ejemplo.com" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="password">Contraseña</label>
+                        <input type="password" id="password" placeholder="Tu contraseña" required>
+                    </div>
+                    <div class="form-options">
+                        <label class="remember-me">
+                            <input type="checkbox"> Recordar sesión
+                        </label>
+                        <a href="#" class="forgot-password">¿Olvidaste tu contraseña?</a>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Iniciar Sesión</button>
+                    <div class="auth-footer">
+                        <p>¿No tienes cuenta? <a href="#" id="registerLink">Regístrate aquí</a></p>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- Admin Login Modal -->
+    <div id="adminLoginModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <div class="modal-header">
+                <h2>Acceso Administrador</h2>
+            </div>
+            <div class="modal-body">
+                <form id="adminLoginForm">
+                    <div class="form-group">
+                        <label for="adminUser">Usuario</label>
+                        <input type="text" id="adminUser" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="adminPass">Contraseña</label>
+                        <input type="password" id="adminPass" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Ingresar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Panel -->
+    <div id="adminPanel" class="admin-panel container">
+        <div class="admin-header">
+            <h2><i class="fas fa-user-shield"></i> Panel de Administración</h2>
+            <button id="logoutBtn" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</button>
+        </div>
+        
+        <h3><i class="fas fa-shopping-cart"></i> Órdenes Recientes</h3>
+        <table class="orders-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Fecha</th>
+                    <th>Cliente</th>
+                    <th>Total</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="ordersList">
+                <!-- Las órdenes se cargarán aquí dinámicamente -->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Individual Services Section -->
+    <section class="section">
+        <div class="container">
+            <div class="section-title">
+                <h2>Suscripciones Individuales</h2>
+                <p>¡Los mejores combos de entretenimiento están aquí! Compra ahora y disfruta</p>
+            </div>
+            <div class="services-grid">
+                <!-- Apple Music -->
+                <div class="service-card">
+                    <div class="service-img" style="background-image: url('https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg')"></div>
+                    <div class="service-content">
+                        <h3><span class="emoji">🎵</span> Apple Music</h3>
+                        <div class="price">$4.499</div>
+                        <p>Escucha millones de canciones sin límites.</p>
+                        <button class="btn btn-primary btn-block btn-buy" data-name="Apple Music" data-price="4499">Comprar</button>
+                    </div>
+                </div>
+                
+                <!-- Apple TV+ -->
+                <div class="service-card">
+                    <div class="service-img" style="background-image: url('https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg')"></div>
+                    <div class="service-content">
+                        <h3><span class="emoji">📺</span> Apple TV+ (3 meses)</h3>
+                        <div class="price">$7.499</div>
+                        <p>Disfruta de Apple TV+ durante 3 meses.</p>
+                        <button class="btn btn-primary btn-block btn-buy" data-name="Apple TV+ (3 meses)" data-price="7499">Comprar</button>
+                    </div>
+                </div>
+                
+                <!-- Claro Video -->
+                <div class="service-card">
+                    <div class="service-img" style="background-image: url('https://upload.wikimedia.org/wikipedia/commons/2/2e/Claro_Video_logo.png')"></div>
+                    <div class="service-content">
+                        <h3><span class="emoji">🎬</span> Claro Video</h3>
+                        <div class="price">$6.499</div>
+                        <p>Películas, series y más en Claro Video.</p>
+                        <button class="btn btn-primary btn-block btn-buy" data-name="Claro Video" data-price="6499">Comprar</button>
+                    </div>
+                </div>
+                
+                <!-- Crunchyroll -->
+                <div class="service-card">
+                    <div class="service-img" style="background-image: url('https://upload.wikimedia.org/wikipedia/commons/7/7a/Crunchyroll_Logo.png')"></div>
+                    <div class="service-content">
+                        <h3><span class="emoji">🍥</span> Crunchyroll</h3>
+                        <div class="price">$3.499</div>
+                        <p>Todo el anime que te gusta en un solo lugar.</p>
+                        <button class="btn btn-primary btn-block btn-buy" data-name="Crunchyroll" data-price="3499">Comprar</button>
+                    </div>
+                </div>
+                
+                <!-- IPTV -->
+                <div class="service-card">
+                    <div class="service-img" style="background-image: url('https://upload.wikimedia.org/wikipedia/commons/6/6c/IPTV_logo.png')"></div>
+                    <div class="service-content">
+                        <h3><span class="emoji">📡</span> IPTV</h3>
+                        <div class="price">$3.999</div>
+                        <p>Televisión en vivo y canales premium.</p>
+                        <button class="btn btn-primary btn-block btn-buy" data-name="IPTV" data-price="3999">Comprar</button>
+                    </div>
+                </div>
+                
+                <!-- PLEX -->
+                <div class="service-card">
+                    <div class="service-img" style="background-image: url('https://upload.wikimedia.org/wikipedia/commons/6/67/Plex_Logo.png')"></div>
+                    <div class="service-content">
+                        <h3><span class="emoji">🎛</span> PLEX</h3>
+                        <div class="price">$3.999</div>
+                        <p>Tu contenido multimedia organizado y accesible.</p>
+                        <button class="btn btn-primary btn-block btn-buy" data-name="PLEX" data-price="3999">Comprar</button>
+                    </div>
+                </div>
+                
+                <!-- Spotify 1 mes -->
+                <div class="service-card">
+                    <div class="service-img" style="background-image: url('https://upload.wikimedia.org/wikipedia/commons/1/19/Spotify_logo_without_text.svg')"></div>
+                    <div class="service-content">
+                        <h3><span class="emoji">🎶</span> Spotify (1 mes)</h3>
+                        <div class="price">$2.999</div>
+                        <p>Un mes de música sin anuncios.</p>
+                        <button class="btn btn-primary btn-block btn-buy" data-name="Spotify (1 mes)" data-price="2999">Comprar</button>
+                    </div>
+                </div>
+                
+                <!-- Spotify 2 meses -->
+                <div class="service-card">
+                    <div class="service-img" style="background-image: url('https://upload.wikimedia.org/wikipedia/commons/1/19/Spotify_logo_without_text.svg')"></div>
+                    <div class="service-content">
+                        <h3><span class="emoji">🎶</span> Spotify (2 meses)</h3>
+                        <div class="price">$5.499</div>
+                        <p>Dos meses de Spotify Premium.</p>
+                        <button class="btn btn-primary btn-block btn-buy" data-name="Spotify (2 meses)" data-price="5499">Comprar</button>
+                    </div>
+                </div>
+                
+                <!-- YouTube Premium 30 días -->
+                <div class="service-card">
+                    <div class="service-img" style="background-image: url('https://upload.wikimedia.org/wikipedia/commons/0/09/YouTube_full-color_icon_%282017%29.svg')"></div>
+                    <div class="service-content">
+                        <h3><span class="emoji">▶</span> YouTube Premium (30 días)</h3>
+                        <div class="price">$3.999</div>
+                        <p>Disfruta de YouTube sin anuncios por 30 días.</p>
+                        <button class="btn btn-primary btn-block btn-buy" data-name="YouTube Premium (30 días)" data-price="3999">Comprar</button>
+                    </div>
+                </div>
+                
+                <!-- YouTube 3 meses -->
+                <div class="service-card">
+                    <div class="service-img" style="background-image: url('https://upload.wikimedia.org/wikipedia/commons/0/09/YouTube_full-color_icon_%282017%29.svg')"></div>
+                    <div class="service-content">
+                        <h3><span class="emoji">▶</span> YouTube (3 meses)</h3>
+                        <div class="price">$7.999</div>
+                        <p>Tres meses de YouTube Premium.</p>
+                        <button class="btn btn-primary btn-block btn-buy" data-name="YouTube (3 meses)" data-price="7999">Comprar</button>
+                    </div>
+                </div>
+                
+                <!-- Netflix -->
+                <div class="service-card">
+                    <div class="service-img" style="background-image: url('https://upload.wikimedia.org/wikipedia/commons/0/08/Netflix_2015_logo.svg')"></div>
+                    <div class="service-content">
+                        <h3><span class="emoji">🎬</span> Netflix (1 pantalla)</h3>
+                        <div class="price">$4.499</div>
+                        <p>Netflix para una pantalla, ideal para uso personal.</p>
+                        <button class="btn btn-primary btn-block btn-buy" data-name="Netflix (1 pantalla)" data-price="4499">Comprar</button>
+                    </div>
+                </div>
+                
+                <!-- Disney+ -->
+                <div class="service-card">
+                    <div class="service-img" style="background-image: url('https://upload.wikimedia.org/wikipedia/commons/3/3e/Disney%2B_logo.svg')"></div>
+                    <div class="service-content">
+                        <h3><span class="emoji">✨</span> Disney+ (1 pantalla)</h3>
+                        <div class="price">$3.999</div>
+                        <p>Disney+ para una pantalla, disfruta de todo el contenido Disney.</p>
+                        <button class="btn btn-primary btn-block btn-buy" data-name="Disney+ (1 pantalla)" data-price="3999">Comprar</button>
+                    </div>
+                </div>
+                
+                <!-- Paramount+ -->
+                <div class="service-card">
+                    <div class="service-img" style="background-image: url('https://upload.wikimedia.org/wikipedia/commons/a/a7/Paramount_Plus.svg')"></div>
+                    <div class="service-content">
+                        <h3><span class="emoji">🎥</span> Paramount+ (1 pantalla)</h3>
+                        <div class="price">$3.999</div>
+                        <p>Paramount+ para una pantalla, películas y series exclusivas.</p>
+                        <button class="btn btn-primary btn-block btn-buy" data-name="Paramount+ (1 pantalla)" data-price="3999">Comprar</button>
+                    </div>
+                </div>
+                
+                <!-- HBO Max -->
+                <div class="service-card">
+                    <div class="service-img" style="background-image: url('https://upload.wikimedia.org/wikipedia/commons/1/17/HBO_Max_Logo.svg')"></div>
+                    <div class="service-content">
+                        <h3><span class="emoji">🎭</span> HBO Max (1 pantalla)</h3>
+                        <div class="price">$3.999</div>
+                        <p>HBO Max para una pantalla, los mejores estrenos y series.</p>
+                        <button class="btn btn-primary btn-block btn-buy" data-name="HBO Max (1 pantalla)" data-price="3999">Comprar</button>
+                    </div>
+                </div>
+                
+                <!-- Amazon Prime Video -->
+                <div class="service-card">
+                    <div class="service-img" style="background-image: url('https://upload.wikimedia.org/wikipedia/commons/f/f1/Prime_Video.png')"></div>
+                    <div class="service-content">
+                        <h3><span class="emoji">📦</span> Amazon Prime Video (1 pantalla)</h3>
+                        <div class="price">$3.999</div>
+                        <p>Amazon Prime Video para una pantalla, contenido exclusivo y envíos gratis.</p>
+                        <button class="btn btn-primary btn-block btn-buy" data-name="Amazon Prime Video (1 pantalla)" data-price="3999">Comprar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Combos Section -->
+    <section class="section combos-section" id="combos">
+        <div class="container">
+            <div class="section-title">
+                <h2>Combos Exclusivos</h2>
+                <p>Ahorra más con nuestros paquetes combinados de servicios de streaming</p>
+            </div>
+            <div class="services-grid">
+                <!-- Combo 1 -->
+                <div class="combo-card">
+                    <div class="combo-badge">Más Popular</div>
+                    <div class="combo-content">
+                        <h3>Combo Ninja</h3>
+                        <div class="platforms">
+                            <span class="platform-tag"><span class="emoji">🎬</span> Netflix</span>
+                            <span class="platform-tag"><span class="emoji">✨</span> Disney+</span>
+                        </div>
+                        <div class="price">$5.199</div>
+                        <p>Disfruta de Netflix y Disney+ en un solo combo.</p>
+                        <button class="btn btn-primary btn-block btn-buy" data-name="Combo Ninja (Netflix + Disney+)" data-price="5199">Comprar Combo</button>
+                    </div>
+                </div>
+                <!-- Combo 2 -->
+                <div class="combo-card">
+                    <div class="combo-content">
+                        <h3>Combo Galáctico</h3>
+                        <div class="platforms">
+                            <span class="platform-tag"><span class="emoji">✨</span> Disney+</span>
+                            <span class="platform-tag"><span class="emoji">🎥</span> Paramount+</span>
+                        </div>
+                        <div class="price">$4.499</div>
+                        <p>Disney+ y Paramount+ juntos para toda la familia.</p>
+                        <button class="btn btn-primary btn-block btn-buy" data-name="Combo Galáctico (Disney+ + Paramount+)" data-price="4499">Comprar Combo</button>
+                    </div>
+                </div>
+                <!-- Combo 3 -->
+                <div class="combo-card">
+                    <div class="combo-content">
+                        <h3>Combo Zombie</h3>
+                        <div class="platforms">
+                            <span class="platform-tag"><span class="emoji">🎭</span> HBO Max</span>
+                            <span class="platform-tag"><span class="emoji">🎬</span> Netflix</span>
+                        </div>
+                        <div class="price">$5.199</div>
+                        <p>HBO Max y Netflix para los amantes de las series y películas.</p>
+                        <button class="btn btn-primary btn-block btn-buy" data-name="Combo Zombie (HBO Max + Netflix)" data-price="5199">Comprar Combo</button>
+                    </div>
+                </div>
+                <!-- Combo 5 -->
+                <div class="combo-card">
+                    <div class="combo-content">
+                        <h3>Combo Familiar</h3>
+                        <div class="platforms">
+                            <span class="platform-tag"><span class="emoji">✨</span> Disney+</span>
+                            <span class="platform-tag"><span class="emoji">🎭</span> HBO Max</span>
+                        </div>
+                        <div class="price">$4.499</div>
+                        <p>El mejor entretenimiento para toda la familia.</p>
+                        <button class="btn btn-primary btn-block btn-buy" data-name="Combo Familiar (Disney+ + HBO Max)" data-price="4499">Comprar Combo</button>
+                    </div>
+                </div>
+                <!-- Combo 6 -->
+                <div class="combo-card">
+                    <div class="combo-content">
+                        <h3>Combo de Películas Épicas</h3>
+                        <div class="platforms">
+                            <span class="platform-tag"><span class="emoji">🎥</span> Paramount+</span>
+                            <span class="platform-tag"><span class="emoji">🎭</span> HBO Max</span>
+                        </div>
+                        <div class="price">$4.499</div>
+                        <p>Las mejores películas y estrenos en un solo combo.</p>
+                        <button class="btn btn-primary btn-block btn-buy" data-name="Combo de Películas Épicas (Paramount+ + HBO Max)" data-price="4499">Comprar Combo</button>
+                    </div>
+                </div>
+                <!-- Combo 7 -->
+                <div class="combo-card">
+                    <div class="combo-badge">Streaming Total</div>
+                    <div class="combo-content">
+                        <h3>Combo Streaming Total</h3>
+                        <div class="platforms">
+                            <span class="platform-tag"><span class="emoji">🎬</span> Netflix</span>
+                            <span class="platform-tag"><span class="emoji">✨</span> Disney+</span>
+                            <span class="platform-tag"><span class="emoji">🎥</span> Paramount+</span>
+                            <span class="platform-tag"><span class="emoji">🎭</span> HBO Max</span>
+                        </div>
+                        <div class="price">$7.499</div>
+                        <p>¡Todos los servicios en un solo combo premium!</p>
+                        <button class="btn btn-primary btn-block btn-buy" data-name="Combo Streaming Total (Netflix + Disney+ + Paramount+ + HBO Max)" data-price="7499">Comprar Combo</button>
+                    </div>
+                </div>
+                <!-- Combo 8 -->
+                <div class="combo-card">
+                    <div class="combo-content">
+                        <h3>Combo de Acción</h3>
+                        <div class="platforms">
+                            <span class="platform-tag"><span class="emoji">🎬</span> Netflix</span>
+                            <span class="platform-tag"><span class="emoji">🎥</span> Paramount+</span>
+                        </div>
+                        <div class="price">$5.199</div>
+                        <p>Series y películas llenas de acción y aventuras.</p>
+                        <button class="btn btn-primary btn-block btn-buy" data-name="Combo de Acción (Netflix + Paramount+)" data-price="5199">Comprar Combo</button>
+                    </div>
+                </div>
+                <!-- Combo 9 -->
+                <div class="combo-card">
+                    <div class="combo-content">
+                        <h3>Combo Aventura</h3>
+                        <div class="platforms">
+                            <span class="platform-tag"><span class="emoji">🎬</span> Netflix</span>
+                            <span class="platform-tag"><span class="emoji">📦</span> Amazon Prime</span>
+                        </div>
+                        <div class="price">$5.199</div>
+                        <p>Netflix y Amazon Prime para los exploradores de historias.</p>
+                        <button class="btn btn-primary btn-block btn-buy" data-name="Combo Aventura (Netflix + Amazon Prime)" data-price="5199">Comprar Combo</button>
+                    </div>
+                </div>
+                <!-- Combo 10 -->
+                <div class="combo-card">
+                    <div class="combo-content">
+                        <h3>Combo iSeries</h3>
+                        <div class="platforms">
+                            <span class="platform-tag"><span class="emoji">✨</span> Disney+</span>
+                            <span class="platform-tag"><span class="emoji">📦</span> Amazon Prime</span>
+                        </div>
+                        <div class="price">$4.499</div>
+                        <p>Las mejores series de Disney+ y Amazon Prime.</p>
+                        <button class="btn btn-primary btn-block btn-buy" data-name="Combo iSeries (Disney+ + Amazon Prime)" data-price="4499">Comprar Combo</button>
+                    </div>
+                </div>
+                <!-- Combo 11 -->
+                <div class="combo-card">
+                    <div class="combo-content">
+                        <h3>Combo Películas</h3>
+                        <div class="platforms">
+                            <span class="platform-tag"><span class="emoji">🎭</span> HBO Max</span>
+                            <span class="platform-tag"><span class="emoji">📦</span> Amazon Prime</span>
+                        </div>
+                        <div class="price">$4.499</div>
+                        <p>HBO Max y Amazon Prime para los cinéfilos de corazón.</p>
+                        <button class="btn btn-primary btn-block btn-buy" data-name="Combo Películas (HBO Max + Amazon Prime)" data-price="4499">Comprar Combo</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Sección para compartir la página -->
+    <div class="share-section">
+        <h3>¡Comparte esta página!</h3>
+        <div class="share-buttons">
+            <a class="share-btn whatsapp" href="https://wa.me/?text=¡Mira%20estas%20suscripciones%20premium!%20https://streaming.com" target="_blank" title="Compartir por WhatsApp">
+                <i class="fab fa-whatsapp"></i>
+            </a>
+            <a class="share-btn facebook" href="https://www.facebook.com/sharer/sharer.php?u=https://streaming.com" target="_blank" title="Compartir en Facebook">
+                <i class="fab fa-facebook-f"></i>
+            </a>
+            <a class="share-btn twitter" href="https://twitter.com/intent/tweet?url=https://streaming.com&text=¡Mira%20estas%20suscripciones%20premium!" target="_blank" title="Compartir en Twitter">
+                <i class="fab fa-twitter"></i>
+            </a>
+            <button class="share-btn link" id="copyLinkBtn" title="Copiar enlace">
+                <i class="fa fa-link"></i>
+            </button>
+        </div>
+        <span id="copyMsg" style="display:none; color: #fdbb2d; margin-top:10px;">¡Enlace copiado!</span>
+    </div>
+
+    <!-- Botón flotante de WhatsApp -->
+    <a href="https://wa.me/5491112345678?text=Hola%20quiero%20más%20info%20sobre%20Streaming%20Elite" class="whatsapp-float" target="_blank" title="¡Chatea con nosotros por WhatsApp!">
+        <i class="fab fa-whatsapp"></i>
+    </a>
+
+    <!-- Admin Access Button -->
+    <div id="adminAccessBtn" style="position: fixed; bottom: 30px; left: 30px; background: var(--primary); color: white; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 2px 10px rgba(0,0,0,0.2); z-index: 100;">
+        <i class="fas fa-user-shield"></i>
+    </div>
+
+    <!-- Checkout Modal -->
+    <div id="checkoutModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <div class="modal-header">
+                <h2>Finalizar Compra</h2>
+            </div>
+            <div class="modal-body">
+                <form id="checkoutForm" class="checkout-form">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="firstName">Nombre</label>
+                            <input type="text" id="firstName" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="lastName">Apellido</label>
+                            <input type="text" id="lastName" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Correo Electrónico</label>
+                        <input type="email" id="checkoutEmail" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="phone">Teléfono</label>
+                        <input type="tel" id="phone" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="address">Dirección</label>
+                        <input type="text" id="address" required>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="city">Ciudad</label>
+                            <input type="text" id="city" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="zipCode">Código Postal</label>
+                            <input type="text" id="zipCode" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="paymentMethod">Método de Pago</label>
+                        <select id="paymentMethod" required>
+                            <option value="">Seleccione un método</option>
+                            <option value="transfer">Transferencia Bancaria</option>
+                            <option value="paypal">PayPal</option>
+                            <option value="credit">Tarjeta de Crédito</option>
+                            <option value="crypto">Criptomonedas</option>
+                        </select>
+                    </div>
+                    
+                    <div class="order-summary">
+                        <h3>Resumen de Pedido</h3>
+                        <div id="orderItems"></div>
+                        <div class="order-total">
+                            <span>Total:</span>
+                            <span id="orderTotal">$0</span>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary" style="margin-top: 20px;">Confirmar Compra</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Invoice Modal -->
+    <div id="invoiceModal" class="modal">
+        <div class="modal-content" style="max-width: 800px;">
+            <span class="close">&times;</span>
+            <div id="invoiceContent" class="invoice-container">
+                <div class="invoice-header">
+                    <h1>Streaming Elite</h1>
+                    <p>Suscripciones Premium</p>
+                    <h2>FACTURA</h2>
+                    <p id="invoiceNumber">Factura #: SE-20250001</p>
+                    <p id="invoiceDate">Fecha: 25/06/2025</p>
+                </div>
+                
+                <div class="invoice-details">
+                    <div class="invoice-company">
+                        <h3>Streaming Elite</h3>
+                        <p>Av. Siempreviva 742</p>
+                        <p>Springfield, CP 12345</p>
+                        <p>info@streamingelite.com</p>
+                        <p>+54 9 3413 44-5168</p>
+                    </div>
+                    <div class="invoice-client">
+                        <h3 id="clientName">Cliente: Juan Pérez</h3>
+                        <p id="clientEmail">Email: juan@example.com</p>
+                        <p id="clientPhone">Teléfono: +54 9 11 1234-5678</p>
+                        <p id="clientAddress">Dirección: Calle Falsa 123</p>
+                    </div>
+                </div>
+                
+                <table class="invoice-items">
+                    <thead>
+                        <tr>
+                            <th>Descripción</th>
+                            <th>Precio</th>
+                        </tr>
+                    </thead>
+                    <tbody id="invoiceItems">
+                        <!-- Items will be added here dynamically -->
+                    </tbody>
+                </table>
+                
+                <div class="invoice-totals">
+                    <table>
+                        <tr>
+                            <td>Subtotal:</td>
+                            <td id="invoiceSubtotal">$0</td>
+                        </tr>
+                        <tr>
+                            <td>IVA (21%):</td>
+                            <td id="invoiceTax">$0</td>
+                        </tr>
+                        <tr>
+                            <td class="total">Total:</td>
+                            <td class="total" id="invoiceTotal">$0</td>
+                        </tr>
+                    </table>
+                </div>
+                
+                <div class="invoice-footer">
+                    <p>Gracias por su compra. Para cualquier consulta, contáctenos en info@streamingelite.com</p>
+                    <p>Streaming Elite - Todos los derechos reservados © 2025</p>
+                </div>
+            </div>
+            
+            <div class="modal-footer">
+                <button id="downloadInvoice" class="btn btn-primary">Descargar Factura (PDF)</button>
+                <button id="saveInvoiceTxt" class="btn btn-primary">Guardar Factura (TXT)</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-column">
+                    <h3>Sobre Nosotros</h3>
+                    <ul>
+                        <li><a href="#">¿Quiénes somos?</a></li>
+                        <li><a href="#">Términos y condiciones</a></li>
+                        <li><a href="#">Política de privacidad</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Contacto</h3>
+                    <ul>
+                        <li><a href="mailto:info@streaming.com">info@streaming.com</a></li>
+                        <li><a href="#">Soporte</a></li>
+                        <li>
+                            <a href="https://wa.me/5493413445168" target="_blank">
+                                <i class="fab fa-whatsapp"></i> +54 9 3413 44‑5168
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Síguenos</h3>
+                    <div class="social-links">
+                        <a href="https://facebook.com" target="_blank"><i class="fab fa-facebook-f"></i></a>
+                        <a href="https://twitter.com" target="_blank"><i class="fab fa-twitter"></i></a>
+                        <a href="https://instagram.com" target="_blank"><i class="fab fa-instagram"></i></a>
+                        <a href="https://wa.me/5491112345678" target="_blank"><i class="fab fa-whatsapp"></i></a>
+                    </div>
+                </div>
+            </div>
+            <div class="copyright">
+                &copy; 2025 Streaming Elite - Todos los derechos reservados. | <a href="https://streaming.com" style="color:#fdbb2d;">streaming.com</a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Variables globales
+        let cart = [];
+        let currentOrder = {};
+        let allOrders = JSON.parse(localStorage.getItem('streamingEliteOrders')) || [];
+        
+        // Credenciales del administrador
+        const ADMIN_CREDENTIALS = {
+            username: 'admin',
+            password: 'admin123' // Contraseña segura para el administrador
+        };
+        
+        // Inicializar jsPDF
+        const { jsPDF } = window.jspdf;
+        
+        // Mostrar/ocultar panel de admin
+        document.getElementById('adminAccessBtn').addEventListener('click', function() {
+            document.getElementById('adminLoginModal').style.display = 'block';
+        });
+        
+        // Manejar login de administrador
+        document.getElementById('adminLoginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('adminUser').value;
+            const password = document.getElementById('adminPass').value;
+            
+            if(username === ADMIN_CREDENTIALS.username && password === ADMIN_CREDENTIALS.password) {
+                document.getElementById('adminLoginModal').style.display = 'none';
+                document.getElementById('adminPanel').style.display = 'block';
+                loadOrders();
+            } else {
+                alert('Credenciales incorrectas');
+            }
+        });
+        
+        // Cerrar sesión de administrador
+        document.getElementById('logoutBtn').addEventListener('click', function() {
+            document.getElementById('adminPanel').style.display = 'none';
+        });
+        
+        // Cargar órdenes en el panel de admin
+        function loadOrders() {
+            const ordersList = document.getElementById('ordersList');
+            ordersList.innerHTML = '';
+            
+            if(allOrders.length === 0) {
+                ordersList.innerHTML = '<tr><td colspan="6" style="text-align: center;">No hay órdenes registradas</td></tr>';
+                return;
+            }
+            
+            // Ordenar por fecha (más reciente primero)
+            const sortedOrders = [...allOrders].sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            sortedOrders.forEach(order => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${order.orderNumber}</td>
+                    <td>${order.date}</td>
+                    <td>${order.customer.firstName} ${order.customer.lastName}</td>
+                    <td>$${order.total.toLocaleString('es-AR')}</td>
+                    <td><span class="status-badge">Completado</span></td>
+                    <td>
+                        <button class="view-order-btn" data-order="${order.orderNumber}">
+                            <i class="fas fa-eye"></i> Ver
+                        </button>
+                    </td>
+                `;
+                ordersList.appendChild(row);
+            });
+            
+            // Agregar event listeners a los botones de ver
+            document.querySelectorAll('.view-order-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const orderNumber = this.getAttribute('data-order');
+                    viewOrderDetails(orderNumber);
+                });
+            });
+        }
+        
+        // Ver detalles de una orden
+        function viewOrderDetails(orderNumber) {
+            const order = allOrders.find(o => o.orderNumber === orderNumber);
+            if(!order) return;
+            
+            const detailsHtml = `
+                <h4>Detalles de la Orden #${order.orderNumber}</h4>
+                <div class="order-details">
+                    <p><strong>Cliente:</strong> ${order.customer.firstName} ${order.customer.lastName}</p>
+                    <p><strong>Email:</strong> ${order.customer.email}</p>
+                    <p><strong>Teléfono:</strong> ${order.customer.phone}</p>
+                    <p><strong>Dirección:</strong> ${order.customer.address}</p>
+                    <p><strong>Método de Pago:</strong> ${getPaymentMethodName(order.paymentMethod)}</p>
+                    
+                    <h5>Productos:</h5>
+                    <ul>
+                        ${order.items.map(item => `<li>${item.name} - $${item.price.toLocaleString('es-AR')}</li>`).join('')}
+                    </ul>
+                    
+                    <p><strong>Subtotal:</strong> $${order.subtotal.toLocaleString('es-AR')}</p>
+                    <p><strong>IVA (21%):</strong> $${order.tax.toLocaleString('es-AR')}</p>
+                    <p><strong>Total:</strong> $${order.total.toLocaleString('es-AR')}</p>
+                </div>
+            `;
+            
+            // Mostrar en un modal o alerta
+            alertify.alert('Detalles de la Orden', detailsHtml);
+        }
+        
+        // Copiar enlace al portapapeles
+        document.getElementById('copyLinkBtn').onclick = function() {
+            navigator.clipboard.writeText('https://streaming.com').then(function() {
+                document.getElementById('copyMsg').style.display = 'inline';
+                setTimeout(() => document.getElementById('copyMsg').style.display = 'none', 2000);
+            });
+        };
+        
+        // Scroll suave para el CTA
+        document.querySelectorAll('a.cta-btn').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                const href = btn.getAttribute('href');
+                if (href && href.startsWith('#')) {
+                    e.preventDefault();
+                    document.querySelector(href).scrollIntoView({ behavior: 'smooth' });
+                }
+            });
+        });
+        
+        // Manejar el modal de checkout
+        const checkoutModal = document.getElementById('checkoutModal');
+        const invoiceModal = document.getElementById('invoiceModal');
+        const closeButtons = document.querySelectorAll('.close');
+        
+        // Cerrar modales al hacer clic en la X
+        closeButtons.forEach(btn => {
+            btn.addEventListener('click', function() {
+                checkoutModal.style.display = 'none';
+                invoiceModal.style.display = 'none';
+            });
+        });
+        
+        // Cerrar modales al hacer clic fuera del contenido
+        window.addEventListener('click', function(event) {
+            if (event.target === checkoutModal) {
+                checkoutModal.style.display = 'none';
+            }
+            if (event.target === invoiceModal) {
+                invoiceModal.style.display = 'none';
+            }
+            if (event.target === document.getElementById('adminLoginModal')) {
+                document.getElementById('adminLoginModal').style.display = 'none';
+            }
+        });
+        
+        // Manejar clic en botones de compra
+        document.querySelectorAll('.btn-buy').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const productName = this.getAttribute('data-name');
+                const productPrice = parseInt(this.getAttribute('data-price'));
+                
+                // Agregar al carrito
+                cart.push({
+                    name: productName,
+                    price: productPrice
+                });
+                
+                // Actualizar resumen de pedido
+                updateOrderSummary();
+                
+                // Mostrar modal de checkout
+                checkoutModal.style.display = 'block';
+            });
+        });
+        
+        // Actualizar resumen de pedido
+        function updateOrderSummary() {
+            const orderItemsContainer = document.getElementById('orderItems');
+            orderItemsContainer.innerHTML = '';
+            
+            let subtotal = 0;
+            
+            cart.forEach(item => {
+                const itemElement = document.createElement('div');
+                itemElement.className = 'order-item';
+                itemElement.innerHTML = `
+                    <span>${item.name}</span>
+                    <span>$${item.price.toLocaleString('es-AR')}</span>
+                `;
+                orderItemsContainer.appendChild(itemElement);
+                subtotal += item.price;
+            });
+            
+            document.getElementById('orderTotal').textContent = `$${subtotal.toLocaleString('es-AR')}`;
+        }
+        
+        // Manejar envío del formulario de checkout
+        document.getElementById('checkoutForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Obtener datos del formulario
+            const firstName = document.getElementById('firstName').value;
+            const lastName = document.getElementById('lastName').value;
+            const email = document.getElementById('checkoutEmail').value;
+            const phone = document.getElementById('phone').value;
+            const address = document.getElementById('address').value;
+            const city = document.getElementById('city').value;
+            const zipCode = document.getElementById('zipCode').value;
+            const paymentMethod = document.getElementById('paymentMethod').value;
+            
+            // Calcular total
+            let subtotal = 0;
+            cart.forEach(item => subtotal += item.price);
+            const tax = Math.round(subtotal * 0.21);
+            const total = subtotal + tax;
+            
+            // Crear objeto de orden
+            currentOrder = {
+                orderNumber: 'SE-' + new Date().getTime(),
+                date: new Date().toLocaleDateString('es-AR'),
+                customer: {
+                    firstName,
+                    lastName,
+                    email,
+                    phone,
+                    address: `${address}, ${city}, CP ${zipCode}`
+                },
+                paymentMethod,
+                items: [...cart],
+                subtotal,
+                tax,
+                total
+            };
+            
+            // Guardar la orden en el almacenamiento local
+            allOrders.push(currentOrder);
+            localStorage.setItem('streamingEliteOrders', JSON.stringify(allOrders));
+            
+            // Generar factura
+            generateInvoice(currentOrder);
+            
+            // Cerrar modal de checkout y abrir modal de factura
+            checkoutModal.style.display = 'none';
+            invoiceModal.style.display = 'block';
+            
+            // Guardar datos en TXT
+            saveOrderToTxt(currentOrder);
+            
+            // Limpiar carrito
+            cart = [];
+        });
+        
+        // Generar factura en el modal
+        function generateInvoice(order) {
+            // Actualizar información del cliente
+            document.getElementById('invoiceNumber').textContent = `Factura #: ${order.orderNumber}`;
+            document.getElementById('invoiceDate').textContent = `Fecha: ${order.date}`;
+            document.getElementById('clientName').textContent = `Cliente: ${order.customer.firstName} ${order.customer.lastName}`;
+            document.getElementById('clientEmail').textContent = `Email: ${order.customer.email}`;
+            document.getElementById('clientPhone').textContent = `Teléfono: ${order.customer.phone}`;
+            document.getElementById('clientAddress').textContent = `Dirección: ${order.customer.address}`;
+            
+            // Actualizar items de la factura
+            const invoiceItemsContainer = document.getElementById('invoiceItems');
+            invoiceItemsContainer.innerHTML = '';
+            
+            order.items.forEach(item => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${item.name}</td>
+                    <td>$${item.price.toLocaleString('es-AR')}</td>
+                `;
+                invoiceItemsContainer.appendChild(row);
+            });
+            
+            // Actualizar totales
+            document.getElementById('invoiceSubtotal').textContent = `$${order.subtotal.toLocaleString('es-AR')}`;
+            document.getElementById('invoiceTax').textContent = `$${order.tax.toLocaleString('es-AR')}`;
+            document.getElementById('invoiceTotal').textContent = `$${order.total.toLocaleString('es-AR')}`;
+        }
+        
+        // Descargar factura como PDF
+        document.getElementById('downloadInvoice').addEventListener('click', function() {
+            const invoiceContent = document.getElementById('invoiceContent');
+            
+            html2canvas(invoiceContent).then(canvas => {
+                const imgData = canvas.toDataURL('image/png');
+                const pdf = new jsPDF('p', 'mm', 'a4');
+                const imgWidth = 210; // A4 width in mm
+                const pageHeight = 295; // A4 height in mm
+                const imgHeight = canvas.height * imgWidth / canvas.width;
+                let heightLeft = imgHeight;
+                let position = 0;
+                
+                pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                heightLeft -= pageHeight;
+                
+                while (heightLeft >= 0) {
+                    position = heightLeft - imgHeight;
+                    pdf.addPage();
+                    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                    heightLeft -= pageHeight;
+                }
+                
+                pdf.save(`factura-${currentOrder.orderNumber}.pdf`);
+            });
+        });
+        
+        // Guardar factura como TXT
+        document.getElementById('saveInvoiceTxt').addEventListener('click', function() {
+            saveOrderToTxt(currentOrder, true);
+        });
+        
+        // Función para guardar la orden en formato TXT
+        function saveOrderToTxt(order, showAlert = false) {
+            let txtContent = `FACTURA #${order.orderNumber}\n`;
+            txtContent += `Fecha: ${order.date}\n\n`;
+            txtContent += `CLIENTE:\n`;
+            txtContent += `${order.customer.firstName} ${order.customer.lastName}\n`;
+            txtContent += `${order.customer.email}\n`;
+            txtContent += `${order.customer.phone}\n`;
+            txtContent += `${order.customer.address}\n\n`;
+            txtContent += `DETALLE DE COMPRA:\n`;
+            txtContent += `----------------------------------------\n`;
+            
+            order.items.forEach(item => {
+                txtContent += `${item.name}: $${item.price.toLocaleString('es-AR')}\n`;
+            });
+            
+            txtContent += `----------------------------------------\n`;
+            txtContent += `Subtotal: $${order.subtotal.toLocaleString('es-AR')}\n`;
+            txtContent += `IVA (21%): $${order.tax.toLocaleString('es-AR')}\n`;
+            txtContent += `TOTAL: $${order.total.toLocaleString('es-AR')}\n\n`;
+            txtContent += `Método de Pago: ${getPaymentMethodName(order.paymentMethod)}\n\n`;
+            txtContent += `Gracias por su compra!\nStreaming Elite`;
+            
+            // Crear blob y descargar
+            const blob = new Blob([txtContent], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `factura-${order.orderNumber}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            if (showAlert) {
+                alert('Factura guardada como archivo TXT');
+            }
+        }
+        
+        // Obtener nombre del método de pago
+        function getPaymentMethodName(method) {
+            switch(method) {
+                case 'transfer': return 'Transferencia Bancaria';
+                case 'paypal': return 'PayPal';
+                case 'credit': return 'Tarjeta de Crédito';
+                case 'crypto': return 'Criptomonedas';
+                default: return method;
+            }
+        }
+    </script>
+    <!-- AlertifyJS para mejores alertas -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/alertifyjs@1.13.1/build/css/alertify.min.css"/>
+    <script src="https://cdn.jsdelivr.net/npm/alertifyjs@1.13.1/build/alertify.min.js"></script>
+</body>
+</html>
